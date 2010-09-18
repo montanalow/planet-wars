@@ -492,10 +492,6 @@ void pw::game_state::take_turn() {
           // if we can take this planet in a single move, that makes it a more valuable target
           value += 0.05;
         }
-        if (before_arrival.owner() == 0 && at_arrival.owner() == 2 ) {
-          // never get into a menage a troi with the enemy
-          value = 0;
-        }
         if (value > highest_value) {
           destination = planet;
           highest_value = value;
@@ -508,16 +504,29 @@ void pw::game_state::take_turn() {
         break;
       } else {
         int time = source->time_to(*destination);
+        pw::planet before_arrival = destination->in(time - 1);
         pw::planet at_arrival = destination->in(time);
-        int ships = at_arrival.ships() + 1 + (at_arrival.owner() == 2 ? at_arrival.growth_rate() : 0);
+        int ships = at_arrival.ships() + 1;
+        int committed_enemies = 0;
         for (int i = 0; i < _enemy_fleets.size(); ++i ){
           pw::fleet* enemy_fleet = _enemy_fleets[i];
-          if (enemy_fleet->destination()->id() == destination->id() && enemy_fleet->time_remaining() > source->time_to(*destination)){
-            ships += enemy_fleet->ships();
+          if (enemy_fleet->destination()->id() == destination->id() && enemy_fleet->time_remaining() > time) {
+            committed_enemies += enemy_fleet->ships();
+          }
+        }
+        if (before_arrival.owner() == 2) {
+          // direct assault, wahooo
+          source->launch(ships + committed_enemies, destination);
+        } else {
+          // we're attacking a neutral planet
+          if (committed_enemies > 0) {
+            // they're also attacking the same planet, so hold off, and let them do the dirty work of clearing out the neutrals
+            source->commit(ships, destination, 1);
+          } else {
+            source->launch(ships, destination);
           }
         }
 //        std::cerr << "    got target: " << destination->id() << " (" << highest_value << ")\n";
-        source->launch(ships, destination);
       }
     }
   }
