@@ -484,11 +484,17 @@ void pw::game_state::take_turn() {
           continue;
         }
         double time = source->time_to(*planet);
-        pw::planet planet_at_arrival = planet->in(time);
+        pw::planet before_arrival = planet->in(time - 1);
+        pw::planet at_arrival = planet->in(time);
 //        std::cerr << "  target:" << planet_at_arrival.id() << " owner: " << planet_at_arrival.owner() << " time: " << time << " ships: " << planet_at_arrival.ships() << " growth: " << planet_at_arrival.growth_rate() << " value: " << planet_at_arrival.value() / time << "\n";
-        double value = planet_at_arrival.value() / pow(time,2);
-        if (planet_at_arrival.ships() < source->ships() && planet_at_arrival.owner() != 1){
+        double value = at_arrival.value() / pow(time,2);
+        if (at_arrival.ships() < source->ships() && at_arrival.owner() != 1){
+          // if we can take this planet in a single move, that makes it a more valuable target
           value += 0.05;
+        }
+        if (before_arrival.owner() == 0 && at_arrival.owner() == 2 ) {
+          // never get into a menage a troi with the enemy
+          value = 0;
         }
         if (value > highest_value) {
           destination = planet;
@@ -501,9 +507,9 @@ void pw::game_state::take_turn() {
 //        std::cerr << "    no destination\n:";
         break;
       } else {
-  
-        pw::planet d = destination->in(source->time_to(*destination));
-        int ships = d.ships() + 1 + (d.owner() == 2 ? d.growth_rate() : 0);
+        int time = source->time_to(*destination);
+        pw::planet at_arrival = destination->in(time);
+        int ships = at_arrival.ships() + 1 + (at_arrival.owner() == 2 ? at_arrival.growth_rate() : 0);
         for (int i = 0; i < _enemy_fleets.size(); ++i ){
           pw::fleet* enemy_fleet = _enemy_fleets[i];
           if (enemy_fleet->destination()->id() == destination->id() && enemy_fleet->time_remaining() > source->time_to(*destination)){
