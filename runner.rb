@@ -84,6 +84,8 @@ options.maps.each do |m|
         m_results[m][:draws] += 1
         collisions += 1
         print "### draw ### (#{moves} moves)"
+      else
+        print "&&&&&&& what ? #{result}"
       end
       puts " as player 1 vs #{b} @ #{m} | ./runner.rb -b #{b} -m #{m} -p 1 -l tmp.txt -s"
     end
@@ -108,6 +110,8 @@ options.maps.each do |m|
         m_results[m][:draws] += 1
         collisions += 1
         print "### draw ### (#{moves} moves)"
+      else
+        print "&&&&&&& what ? #{result}"
       end
       puts " as player 2 vs #{b} @ #{m} | ./runner.rb -b #{b} -m #{m} -p 2 -l tmp.txt -s"
     end
