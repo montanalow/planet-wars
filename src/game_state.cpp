@@ -460,7 +460,7 @@ void pw::game_state::take_turn() {
 
   // make sure that at least half the homeworlds ships are reserved before attacking
   // this is a crappy fix for over spreading on turn 1 without enough info on enemy commitments
-//  if (_turn < 4) {
+//  if (_turn == 1) {
 //    std::cerr << "*** Homeworld early turn reserves ***\n";
 //    pw::planet* homeworld = _allied_planets[0];
 //    homeworld->reserve(std::max(homeworld->ships() - (50 / _turn), 0));
@@ -484,11 +484,10 @@ void pw::game_state::take_turn() {
           continue;
         }
         double time = source->time_to(*planet);
-        pw::planet before_arrival = planet->in(time - 1);
         pw::planet at_arrival = planet->in(time);
 //        std::cerr << "  target:" << planet_at_arrival.id() << " owner: " << planet_at_arrival.owner() << " time: " << time << " ships: " << planet_at_arrival.ships() << " growth: " << planet_at_arrival.growth_rate() << " value: " << planet_at_arrival.value() / time << "\n";
         double value = at_arrival.value() / pow(time,2);
-        if (at_arrival.ships() < source->ships() && at_arrival.owner() != 1){
+        if (at_arrival.ships() < source->ships() && at_arrival.owner() != 1) {
           // if we can take this planet in a single move, that makes it a more valuable target
           value += 0.05;
         }
@@ -499,7 +498,7 @@ void pw::game_state::take_turn() {
       }
 
       // find the min ships we need to send
-      if (destination == NULL || destination->id() == source->id()) {
+      if (destination == NULL) {
 //        std::cerr << "    no destination\n:";
         break;
       } else {
@@ -514,17 +513,17 @@ void pw::game_state::take_turn() {
             committed_enemies += enemy_fleet->ships();
           }
         }
-        if (before_arrival.owner() == 2) {
+        if (before_arrival.owner() == 0) {
+          // we're attacking a neutral planet
+          if (committed_enemies > 0 && at_arrival.ships() > 0 ) {
+            // they're also attacking the same planet, so hold off, and let them do the dirty work of clearing out the neutrals
+            source->commit(ships + committed_enemies + destination->growth_rate(), destination, 1);
+          } else {
+            source->launch(ships + committed_enemies, destination);
+          }
+        } else {
           // direct assault, wahooo
           source->launch(ships + committed_enemies, destination);
-        } else {
-          // we're attacking a neutral planet
-          if (committed_enemies > 0) {
-            // they're also attacking the same planet, so hold off, and let them do the dirty work of clearing out the neutrals
-            source->commit(ships, destination, 1);
-          } else {
-            source->launch(ships, destination);
-          }
         }
 //        std::cerr << "    got target: " << destination->id() << " (" << highest_value << ")\n";
       }
