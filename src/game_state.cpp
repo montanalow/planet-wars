@@ -298,12 +298,12 @@ void pw::game_state::take_turn() {
       if (enemy_fleet->destination()->growth_rate() != g ) {
         continue;
       }
-      pw::planet planet_before_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining() - 1);
-      if (planet_before_invasion.owner() == 1) { // invasion!
-//        std::cerr << "  enemy fleet destination " << enemy_fleet->destination()->id() << " in " << enemy_fleet->time_remaining() << " turns with " << enemy_fleet->ships() <<  " ships \n";
-        pw::planet planet_after_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining());
-//        std::cerr << "    defender has " << enemy_fleet->destination()->ships() << " ships (" << enemy_fleet->destination()->growth_rate() * enemy_fleet->time_remaining() <<  " growth) | after invasion owner: " << planet_after_invasion.owner() << " ships: " << planet_after_invasion.ships() << "\n";
-        if (enemy_fleet->destination()->owner() == 1){
+      if (enemy_fleet->destination()->owner() == 1) {
+        pw::planet planet_before_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining() - 1);
+        if (planet_before_invasion.owner() == 1) { // invasion!
+//          std::cerr << "  enemy fleet destination " << enemy_fleet->destination()->id() << " in " << enemy_fleet->time_remaining() << " turns with " << enemy_fleet->ships() <<  " ships \n";
+          pw::planet planet_after_invasion = enemy_fleet->destination()->in(enemy_fleet->time_remaining());
+//          std::cerr << "    defender has " << enemy_fleet->destination()->ships() << " ships (" << enemy_fleet->destination()->growth_rate() * enemy_fleet->time_remaining() <<  " growth) | after invasion owner: " << planet_after_invasion.owner() << " ships: " << planet_after_invasion.ships() << "\n";
           if (planet_after_invasion.owner() == 1) {
             // reserve only as many ships as it takes to defend
             enemy_fleet->destination()->reserve(enemy_fleet->destination()->ships() - planet_after_invasion.ships());
@@ -311,16 +311,14 @@ void pw::game_state::take_turn() {
             // reserve everything, we're gonna need backup
             enemy_fleet->destination()->reserve(enemy_fleet->destination()->ships());
           }
-        } else {
-          // damn, they are invading the same planet we are with a larger force, we'll see if it's worth keeping in attack phase
-//          std::cerr << "    ahh crap, can't reserve on this planet since we don't own it yet\n";
         }
       } else {
 //        std::cerr << "  not an invader | destination: " << enemy_fleet->destination()->id() << " ships: " << enemy_fleet->ships() << "\n";
       }
     }
   }
-//  std::cerr << "*** Backing up against " << _enemy_fleets.size() << " enemy fleets ***\n";
+
+  //  std::cerr << "*** Backing up against " << _enemy_fleets.size() << " enemy fleets ***\n";
   for (int g = 5; g > 0; --g) {
     for (int i = 0; i < _enemy_fleets.size(); ++i ){
       pw::fleet* enemy_fleet = _enemy_fleets[i];
@@ -363,7 +361,8 @@ void pw::game_state::take_turn() {
       }
     }
   }
-//  std::cerr << "*** Reserve against closest enemy ***\n";
+
+//  std::cerr << "*** Reserve against enemy planetary forces ***\n";
   for (int i = 0; i < _enemy_planets.size(); ++i ){
     // iterate over allied planets largest to smallest
     pw::planet* planet = _enemy_planets[i];
@@ -373,11 +372,12 @@ void pw::game_state::take_turn() {
       int time = planet->time_to(*closest_ally);
 //      std::cerr << "  enemy planet: " << planet->id() << " distance " << time << " turns with " << planet->ships() <<  " ships\n";
 //      std::cerr << "    defender: " << closest_ally->id() << " has " << closest_ally->ships() << " ships + " << closest_ally->growth_rate() * time <<  " production\n";
-      pw::fleet* reserved = closest_ally->reserve(planet->ships() - (closest_ally->growth_rate() * time));
+      closest_ally->reserve(planet->ships() - (closest_ally->growth_rate() * time));
     }
   }
+
 /* TODO
-//  std::cerr << "*** Reserve against closest enemy ***\n";
+//  std::cerr << "*** Reserve against enemy planetary forces ***\n";
   for (int i = 0; i < _enemy_planets.size(); ++i ){
     // iterate over allied planets largest to smallest
     pw::planet* enemy_planet = _enemy_planets[i];
@@ -515,7 +515,7 @@ void pw::game_state::take_turn() {
         }
         if (before_arrival.owner() == 0) {
           // we're attacking a neutral planet
-          if (committed_enemies > 0 && at_arrival.ships() > 0 ) {
+          if (committed_enemies > 0 && at_arrival.ships() > 0) {
             // they're also attacking the same planet, so hold off, and let them do the dirty work of clearing out the neutrals
             source->commit(ships + committed_enemies + destination->growth_rate(), destination, 1);
           } else {
