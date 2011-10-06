@@ -39,11 +39,11 @@ int pw::planet::growth_rate() const {
 
 pw::fleet* pw::planet::launch(int ships, pw::planet* destination) {
   ships = std::max(0, std::min(_ships, ships));
+  std::cerr << "LAUNCH | planet: " << _id << " ships: " << ships << "/" << _ships << "\n";
   if (_owner != 1 || ships == 0) {
     return NULL;
   }
 
-//  std::cerr << "LAUNCH | planet: " << _id << " ships: " << ships << "/" << _ships << "\n";
   _ships -= ships;
   pw::fleet* fleet = new pw::fleet(1, ships, this, destination, time_to(*destination), time_to(*destination), 0, _game_state);
   _game_state->fleets().push_back(fleet);
@@ -53,11 +53,11 @@ pw::fleet* pw::planet::launch(int ships, pw::planet* destination) {
 
 pw::fleet* pw::planet::reserve(int ships) {
   ships = std::max(0, std::min(_ships, ships));
+  std::cerr << "RESERVE | planet: " << _id << " ships: " << ships << "/" << _ships << "\n";
   if (_owner != 1 || ships == 0) {
     return NULL;
   }
 
-//  std::cerr << "RESERVE | planet: " << _id << " ships: " << ships << "/" << _ships << "\n";
   ships = std::max(0, std::min(_ships, ships));
   _ships -= ships;
   pw::fleet* fleet = new pw::fleet(1, ships, this, this, 0, 0, 0, _game_state);
@@ -68,11 +68,11 @@ pw::fleet* pw::planet::reserve(int ships) {
 
 pw::fleet* pw::planet::commit(int ships, pw::planet* destination, int time) {
   ships = std::max(0, std::min(_ships + _growth_rate * time, ships));
-  if (_owner != 1 || ships == 0) {
+  std::cerr << "COMMIT | planet: " << _id << " ships: " << ships << "/" << _ships << "\n";
+  if (_owner != 1 || ships < 0) { // you can commit 0 ships as a flag that this has been considered
     return NULL;
   }
 
-//  std::cerr << "COMMIT | planet: " << _id << " ships: " << ships << "/" << _ships << "\n";
   _ships -= ships; // commitments can make _ships go negative
   pw::fleet* fleet = new pw::fleet(1, ships, this, destination, time_to(*destination), time_to(*destination), time, _game_state);
   _game_state->fleets().push_back(fleet);

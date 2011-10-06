@@ -46,6 +46,7 @@ public:
   int time_remaining() const;
 
   bool just_launched() const;
+  bool is_commitment() const;
   
 
   void source(pw::planet* source);
